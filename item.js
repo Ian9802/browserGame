@@ -4,7 +4,7 @@ var testItem = {
 	id: 1,
 	// id 0 reserved for no item, See action.js
 	name: "item",
-	base: 0,
+	base: 1,
 	// what status decides the normal look of the item
 	normal: {
 		root: "this is a key"

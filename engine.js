@@ -11,10 +11,20 @@ var area;
 var areaState;
 // current areaState
 var status;
+
+var areaPoint = 1;
+var itemPoint = 1;
+var actionPoint = 1;
+
 var noItemsFound = "There are no items of importance here.";
 var itemsFound = "In sight there ";
 var plural = "are : ";
 var singular = "is a ";
+
+// wraps console.log because consoles don't pass well.
+function log(content){
+	console.log(content);
+}
 
 // allows sorting by id's.
 function idSort(a, b) {
@@ -34,12 +44,12 @@ function setAreaState(areaID){
 
 // descibes the area and available items and actions
 function displayArea(areaID){
-	print(describeArea(areaID));
-	var found = displayItem(areaID);
+	log(describeArea(areaID));
+	var found = displayItems(areaID);
 	if(found.length == 0){
-		print(noItemsFound);
+		log(noItemsFound);
 	}else if(found.length == 1){
-		print(itemsFound + singular + found[0]);
+		log(itemsFound + singular + found[0]);
 	}else{
 		var list = "";
 		for(var i=0; i<found.length; i++){
@@ -53,21 +63,20 @@ function displayArea(areaID){
 
 			 
 		}
-		print(itemsFound + plural);
+		log(itemsFound + plural);
 	}
-	print("hello");
 	setAreaState(areaID);
-	displayActions();
+	displayActions(areaID, areaState);
 
 }
 
-// specialized displayItem
-function checkInventory(){
-	print(displayItem(0));
-}
+// specialized displayItems
+// function checkInventory(){
+// 	log(displayItems(0));
+// }
 
 // finds all items within an area and calls describe with them
-function displayItem(areaID){
+function displayItems(areaID){
 	found = [];
 	for (var i = 0; i < items.length; i++) {
 		if(items[i].location == areaID){
@@ -77,15 +86,58 @@ function displayItem(areaID){
 	return found;
 }
 
-function displayActions(areaID, stateID){
+// evaluates if items restrictions are met
+function itemEvaluation(itemRestriction){
+	if(itemRestriction.val == 0){
+		return true;
+	}else if(itemRestriction.val == -1){
+		return false;
+	}else{
+		if(inHand(itemRestriction.val)){
+			if(itemRestriction.and){
+				if(itemEvaluation(itemRestriction.and)){
+					return true;
+				}else{
+					return false;
+				}
+			}else{
+				return true;
+			}
+		}else{
+			if(itemRestriction.or){
+				if(itemEvaluation(itemRestriction.or)){
+					return true;
+				}else{
+					return false;
+				}
+			}else{
+				return false;
+			}
+		}
+	}
+}
+
+// checks to see if the item is in hand
+function inHand(itemID){
+	var position = getLocation(items, itemID);
+	if(items[position].location == 0){
+		return true;
+	}else{
+		return false;
+	}
+}
+
+function displayActions(areaID, statusID){
 	for(var i = 0; i < actions.length; i++){
 		var valid = false;
-		if(actions[i].location[0].area == 0){
-			valid = true;
-		}else{
-			for(var j = 0; j < actions[i].location.length; j++){
-				if(actions[i].location[j].area == areaID){
-					if(actions[i].location[j].state.contains(stateID)){
+		log(actions[i].status);
+		if(actions[i].status.indexOf(statusID) != -1 || actions[i].status.indexOf(0) != -1){
+			if(actions[i].location[0].area == 0){
+				valid = true;
+			}else{
+				for(var j = 0; j < actions[i].location.length; j++){
+					if(actions[i].location[j].area == areaID){
+						itemEvaluation(actions[i].item);
 						valid = true;
 						break;
 					}
@@ -93,7 +145,7 @@ function displayActions(areaID, stateID){
 			}
 		}
 		if(valid){
-			action.perform();
+			actions[i].perform(actions[i].id);
 		}
 	}
 }
@@ -120,7 +172,7 @@ function describeItem(itemID){
 function describeAction(actionID){
 	var location = getLocation(actions, actionID);
 	if(location != -1){
-		return describe(items[location]);
+		return describe(actions[location]);
 	}
 	return "";
 }
@@ -138,25 +190,14 @@ function getLocation(array, ID){
 
 // compiles the description for things.
 function describe(zozo){
-	var core = zozo[statuses[status]];
+	var currentStatus = statuses[getLocation(statuses, status)].name;
+	var core = zozo[currentStatus];
 	if(!core){
-		core = zozo[statuses[zozo.base]];
+		core = zozo[currentStatus];
 	}
 	var content = core.root;
 	if(core.state){
 		content += core.state[zozo.areaState];
 	}
 	return content;
-}
-
-// sets the location for an item
-// takes the item id number and the area to set it to
-function setItemLocation(number, area){
-	for(var i = 0; i < items.length; i++){
-		if(items[i].id < number){
-			break;
-		}else if(items[i].id == number){
-			items[i].location = area;
-		}
-	}
 }

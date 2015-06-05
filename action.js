@@ -3,7 +3,7 @@
 var testAction = {
 	id: 0,
 	name: "Spin",
-	base: 0,
+	base: 1,
 	// what status decides the normal look of the item
 	normal: {
 		root: "spin in circles"
@@ -25,12 +25,12 @@ var testAction = {
 	},
 	// 1 || 2
 	// See below
-	state: [0],
-	// [-1] cannot be done in any state
-	// [0] can be done in any state
-	// [1, 2] can be done in states 1 & 2
-	perform: function(){
-		makeButton(name, 
+	status: [0],
+	// [-1] cannot be done in any status
+	// [0] can be done in any status
+	// [1, 2] can be done in statuses with id's 1 & 2
+	perform: function(id){
+		makeButton("Spin", 
 			{area1ID: 1, area2ID: 2, path: "spun a hole in the wall"}, 
 			testFunction, 
 			describeAction(id)
@@ -44,15 +44,13 @@ var testAction = {
 function testFunction(data){
 	var area1 = getLocation(areas, data.area1ID);
 	var area2 = getLocation(areas, data.area2ID);
-	area1.connected.push(data.area2ID);
-	area1.direction.push(data.path);
-	area2.connected.push(data.area1ID);
-	area2.direction.push(data.path);
+	areas[area1].connected.push(data.area2ID);
+	areas[area1].direction.push(data.path);
+	areas[area2].connected.push(data.area1ID);
+	areas[area2].direction.push(data.path);
 }
 
-print(actions);
 actions.push(testAction);
-print(actions);
 
 var actionLocationExample1 = {
 	area: 1,
