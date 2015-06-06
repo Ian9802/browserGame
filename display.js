@@ -1,7 +1,3 @@
-function makeButton(name, data, funct, tag){
-	createButton("body", name, data, funct, tag);
-}
-
 function partial(funct) {
 	var argArray = Array.prototype.slice.call(arguments, 1);
 	return function() {

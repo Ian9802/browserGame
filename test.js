@@ -1,5 +1,5 @@
 $(function(){
 	console.log('before');
-	createButton("body", "button", "4", print, createButton);
+	createButton("#input", "button", "4", log, createButton);
 	console.log('end');
 });

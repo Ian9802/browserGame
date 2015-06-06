@@ -9,8 +9,7 @@ var testStatus1 = {
 		root: "weirdo"
 	}
 }
-// statuses start at 1 for non-devs.
-// yes this makes me a little sad. 
+// 0 restricted for no status for hidden on items/status on action
 
 var testStatus2 = {
 	id: 2,

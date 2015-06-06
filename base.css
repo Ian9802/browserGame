@@ -1,0 +1,26 @@
+body, html{
+	margin: 0;
+	height: 100%;
+}
+#display{
+	height: 100%;
+	width: 100%;
+	display: table;
+	table-layout: fixed;
+}
+#output{
+	width: 100%;
+	/*min-height: 14pt;*/
+	/*max-height: 40pt;*/
+	height: 150pt;
+	overflow-y: auto;
+	background-color: lightblue;
+}
+#input{
+	display: table-row;
+	width: 100%;
+	min-height: 40pt;
+	height: 100%;
+	overflow: scroll;
+	background-color: orange;
+}

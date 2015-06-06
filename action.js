@@ -63,22 +63,24 @@ var actionLocationExample1 = {
 
 var actionItemExample1 = {
 	val: 1,
-	or: {
-		val: 2,
-		or: {
-			val: 3
-		},
-		and: {
-			val: 4
-		},
-		not: true
-	},
 	and: {
 		val: 5,
 		or: {
 			val: 6
 		}
+	},
+	or: {
+		not: true,
+		val: 2,
+		and: {
+			val: 4
+		},
+
+		or: {
+			val: 3
+		}
 	}
+
 }
 // 1 & (5 || 6) || ¬2 & 4 || 3
 // val: 0 = True; can always be performed if top

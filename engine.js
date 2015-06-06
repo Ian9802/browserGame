@@ -26,21 +26,10 @@ function log(content){
 	console.log(content);
 }
 
-// allows sorting by id's.
-function idSort(a, b) {
-	if(a.id < b.id){
-		return -1;
-	}else if(b.id < a.id){
-		return 1;
-	}else{
-		return 0;
-	}
-}
-
-function setAreaState(areaID){
-	var location = getLocation(areas, areaID);
-	areaState = areas[location].areaState;
-}
+// specialized displayItems
+// function checkInventory(){
+// 	log(displayItems(0));
+// }
 
 // descibes the area and available items and actions
 function displayArea(areaID){
@@ -67,54 +56,77 @@ function displayArea(areaID){
 	}
 	setAreaState(areaID);
 	displayActions(areaID, areaState);
-
 }
 
-// specialized displayItems
-// function checkInventory(){
-// 	log(displayItems(0));
-// }
+/*
+*	areas
+*/
+
+// gets the local state of the area
+function setAreaState(areaID){
+	var location = getLocation(areas, areaID);
+	areaState = areas[location].areaState;
+}
+
+// finds an area by it's id and calls describe with it
+function describeArea(areaID){
+	return describeAreaRaw(areaID, status);
+}
+
+// with any status
+function describeAreaRaw(areaID, statusID){
+	var location = getLocation(areas, areaID);
+	if(location != -1){
+		return describeRaw(areas[location], statusID);
+	}
+	return "";
+}
+
+function describeAreafull(area, statusID, areaState){
+	var statusName = statuses[getLocation(statuses, statusID)].name;
+	var core = zozo[statusName];
+	if(!core){
+		core = zozo[statusName];
+	}
+	var content = core.root;
+	content += core.state[areaState];
+	return content;
+}
+
+/*
+*	Item
+*/
+
+// finds an item by it's id and calls describe with it
+function describeItem(itemID){
+	return describeItemRaw(itemID, status);
+}
+
+// with any status
+function describeItemRaw(itemID, statusID){
+	var location = getLocation(items, itemID);
+	if(location != -1){
+		if(items[location].hidden.indexOf(statusID) != -1){
+			return describeRaw(items[location], statusID);
+		}
+	}
+	return "";
+}
 
 // finds all items within an area and calls describe with them
 function displayItems(areaID){
+	return displayItemsRaw(areaID, status);
+}
+
+// with any status
+function displayItemsRaw(areaID, statusID){
 	found = [];
 	for (var i = 0; i < items.length; i++) {
 		if(items[i].location == areaID){
-			found += describe(items[i]);
+			found += describeRaw(items[i], statusID);
 		}
 	}
 	return found;
-}
-
-// evaluates if items restrictions are met
-function itemEvaluation(itemRestriction){
-	if(itemRestriction.val == 0){
-		return true;
-	}else if(itemRestriction.val == -1){
-		return false;
-	}else{
-		if(inHand(itemRestriction.val)){
-			if(itemRestriction.and){
-				if(itemEvaluation(itemRestriction.and)){
-					return true;
-				}else{
-					return false;
-				}
-			}else{
-				return true;
-			}
-		}else{
-			if(itemRestriction.or){
-				if(itemEvaluation(itemRestriction.or)){
-					return true;
-				}else{
-					return false;
-				}
-			}else{
-				return false;
-			}
-		}
-	}
 }
 
 // checks to see if the item is in hand
@@ -127,10 +139,27 @@ function inHand(itemID){
 	}
 }
 
+/*
+*	actions
+*/
+
+// finds an item by it's id and calls describe with it
+function describeAction(actionID){
+	return describeActionRaw(actionID, status);
+}
+
+// with any status
+function describeActionRaw(actionID, statusID){
+	var location = getLocation(actions, actionID);
+	if(location != -1){
+		return describeRaw(actions[location], statusID);
+	}
+	return "";
+}
+
 function displayActions(areaID, statusID){
 	for(var i = 0; i < actions.length; i++){
 		var valid = false;
-		log(actions[i].status);
 		if(actions[i].status.indexOf(statusID) != -1 || actions[i].status.indexOf(0) != -1){
 			if(actions[i].location[0].area == 0){
 				valid = true;
@@ -150,33 +179,60 @@ function displayActions(areaID, statusID){
 	}
 }
 
-// finds an area by it's id and calls describe with it
-function describeArea(areaID){
-	var location = getLocation(areas, areaID);
-	if(location != -1){
-		return describe(areas[location]);
+// evaluates if items restrictions are met
+function itemEvaluation(itemRestriction){
+	var not;
+	if(itemRestriction.not){
+		not = true;
+	}else{
+		not = false;
 	}
-	return "";
+	if(itemRestriction.val == 0){
+		// true
+		return true;
+	}else if(itemRestriction.val == -1){
+		// false
+		return false;
+	}else{
+		if((inHand(itemRestriction.val) && !not) || (!inHand(itemRestriction.val) && not)){
+			// have item, or don't have the not item
+			if(itemRestriction.and){
+				// and..
+				if(itemEvaluation(itemRestriction.and)){
+					// have other item(s)
+					return true;
+				}else{
+					// don't have other item(s)
+					return false;
+				}
+			}else{
+				// that's all
+				return true;
+			}
+		}else{
+			// don't have item
+			if(itemRestriction.or){
+				// but..
+				if(itemEvaluation(itemRestriction.or)){
+					// do have other item(s)
+					return true;
+				}else{
+					// still missing other item(s)
+					return false;
+				}
+			}else{
+				// that's all
+				return false;
+			}
+		}
+	}
 }
 
-// finds an item by it's id and calls describe with it
-function describeItem(itemID){
-	var location = getLocation(items, itemID);
-	if(location != -1){
-		return describe(items[location]);
-	}
-	return "";
-}
+/*
+*	generics
+*/
 
-// finds an item by it's id and calls describe with it
-function describeAction(actionID){
-	var location = getLocation(actions, actionID);
-	if(location != -1){
-		return describe(actions[location]);
-	}
-	return "";
-}
-
+// gets the location of zozo in an array
 function getLocation(array, ID){
 	for (var i = 0; i < array.length; i++) {
 		if(array[i].id == ID){
@@ -190,14 +246,30 @@ function getLocation(array, ID){
 
 // compiles the description for things.
 function describe(zozo){
-	var currentStatus = statuses[getLocation(statuses, status)].name;
-	var core = zozo[currentStatus];
+	return describeRaw(zozo, status);
+}
+
+// with variable statusID
+function describeRaw(zozo, statusID){
+	var statusName = statuses[getLocation(statuses, statusID)].name;
+	var core = zozo[statusName];
 	if(!core){
-		core = zozo[currentStatus];
+		core = zozo[statusName];
 	}
 	var content = core.root;
 	if(core.state){
 		content += core.state[zozo.areaState];
 	}
 	return content;
+}
+
+// allows sorting by id's.
+function idSort(a, b) {
+	if(a.id < b.id){
+		return -1;
+	}else if(b.id < a.id){
+		return 1;
+	}else{
+		return 0;
+	}
 }

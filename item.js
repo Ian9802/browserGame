@@ -23,6 +23,7 @@ var testItem = {
 	// if an item would be hidden, but it is already in inventory it is visible
 	hidden: [2, 3],
 	// is hidden when status is in this list.
+	// 0 always hidden
 }
 
 items.push(testItem);
