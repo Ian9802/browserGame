@@ -17,6 +17,7 @@ var testAction = {
 		{area: 1},
 		{area: 2}
 	],
+	// areas where the location is valid, below for states, area: 0 in first slot for anywhere.
 	item: {
 		val: 1,
 		or: {
@@ -31,7 +32,10 @@ var testAction = {
 	// [1, 2] can be done in statuses with id's 1 & 2
 	perform: function(id){
 		makeButton("Spin", 
-			{area1ID: 1, area2ID: 2, path: "spun a hole in the wall"}, 
+			{area1ID: 1, area2ID: 2,
+			direction: "You walk through the hole in the wall",
+			description: "Move through hole in the wall",
+			post: "You spun a hole in the wall"}, 
 			testFunction, 
 			describeAction(id)
 		);
@@ -44,10 +48,12 @@ var testAction = {
 function testFunction(data){
 	var area1 = getLocation(areas, data.area1ID);
 	var area2 = getLocation(areas, data.area2ID);
-	areas[area1].connected.push(data.area2ID);
-	areas[area1].direction.push(data.path);
-	areas[area2].connected.push(data.area1ID);
-	areas[area2].direction.push(data.path);
+	var path1 = createConnection(data.area2ID, data.direction, data.description);
+	var path2 = createConnection(data.area1ID, data.direction, data.description);
+	areas[area1].connected.push(path1);
+	areas[area2].connected.push(path2);
+	post(data.post);
+	refresh();
 }
 
 actions.push(testAction);

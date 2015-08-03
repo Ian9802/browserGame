@@ -66,13 +66,22 @@ function neither(itemID1, itemID2){
 
 // creates an area and adds it to the list of areas
 // @roomName = name of room; @baseStatus = the id of the fallback status for the area;
-// @localState = the starting local state for the area; @statusList = list of descriptions of the area acording to status;
-// @connectedList = list of id's of areas this area is connected; @directionList = descriptions of the connections;
-function createArea(roomName, baseStatus, localState, statusList, connectedList, directionList){
+// @localState = the starting local state for the area; 
+// @statusList = list of descriptions of the area acording to status;
+// @connectedList = list of objects of where and how the room is connected. see area.js; 
+function createArea(roomName, baseStatus, localState, statusList, connectedList){
 	var area = createAreaRaw(areaPoint, roomName, baseStatus, 
-		localState, statusList, connectedList, directionList);
+		localState, statusList, connectedList);
 	areaPoint += 1;
 	areas.push(area);
+}
+
+// gets value from area
+function getValueArea(areaID, value){
+	var location = getLocation(areas, areaID);
+	if(location != -1){
+		return areas[location][value];
+	}
 }
 
 // sets value in area
@@ -104,33 +113,58 @@ function setStatusIDArea(areaID, status, statusID){
 	setValueArea(areaID, statuses[location].name, status);
 }
 
-// creates a path from the fromID area to the toID area with the path discription
-function createPath(fromID, toID, path){
-	var location = getLocation(areas, fromID);
-	areas[location].connected.push(toID);
-	areas[location].direction.push(path);
+//  from area ID, to area ID, path taken on movement, description that will appear on action.
+function createPathFull(fromID, toID, direction, description){
+	var connection = createConnection(toID, direction, description);
+	createPath(fromID, connection);
 }
 
-// creates a bidirectional path, desc1 area1 ⇒ area2, desc area2 ⇒ area1
-function createBidirectionalPath(area1, area2, desc1, desc2){
-	createPath(area1, area2, desc1);
-	createPath(area2, area1, desc2);
+// puts a connection into the list of paths in the fromID
+function createPath(fromID, connection){
+	var location = getLocation(areas, fromID);
+	areas[location].connected.push(connection);
 }
 
-// removes a path and description from the list, takes the first it sees. 
-function removePath(fromID, toID){
+// creates a bidirectional path, dir1 desc1 area1 ⇒ area2, dir2 desc2 area2 ⇒ area1
+function createBidirectionalPath(area1, area2, dir1, dir2, desc1, desc2){
+	createPathFull(area1, area2, dir1, desc1);
+	createPathFull(area2, area1, dir2, desc2);
+}
+
+function removePathFull(fromID, toID, direction, description){
+	var connection = createConnection(toID, direction, description);
+	removePath(fromID, connection);
+}
+
+// removes a connection, takes the first it sees. 
+function removePath(fromID, connection){
 	var location = getLocation(areas, fromID);
-	var point = $.inArray(toID, areas[location].connected);
-	if(point != -1){
-		areas[location].connected.splice(point, 1);
-		areas[location].direction.splice(point, 1);
+	for(var i = 0; i < areas[location].connected.length; i++){
+		if(areas[location].connected[i].id == connection.id){
+			if(areas[location].connected[i].direction.valueOf() == connection.direction.valueOf()){
+				if(areas[location].connected[i].description.valueOf() == connection.description.valueOf()){
+					areas[location].connected.splice(i, 1);
+					break;
+				}
+			}
+		}
+	}
+}
+
+function removePathRuthless(area1, area2){
+	var location = getLocation(areas, area1);
+	for(var i = 0; i < areas[location].connected.length; i++){
+		if(areas[location].connected[i].id == area2){
+			areas[location].connected.splice(i, 1);
+			break;
+		}
 	}
 }
 
 // removes a bidirections path, takes the first found on each
 function removeBidirectionalPath(area1, area2){
-	removePath(area1, area2);
-	removePath(area2, area1);
+	removePathRuthless(area1, area2);
+	removePathRuthless(area2, area1);
 }
 
 /*
@@ -194,13 +228,13 @@ function setValueAction(actionID, value, data){
 
 // For when an action should have a button
 function makeButton(name, data, funct, tag){
-	createButton("body", name, data, funct, tag);
+	createButton("#input", name, data, funct, tag);
 }
 
 /*
 *	Raws, be very careful with these.
 */
-function createAreaRaw(areaID, roomName, baseStatus, localState, statusList, connectedList, directionList){
+function createAreaRaw(areaID, roomName, baseStatus, localState, statusList, connectedList){
 	var area = {};
 	area.id = areaID;
 	area.name = roomName;
@@ -213,7 +247,6 @@ function createAreaRaw(areaID, roomName, baseStatus, localState, statusList, con
 		}
 	}
 	area.connected = connectedList;
-	area.direction = directionList;
 	return area;
 }
 
@@ -248,6 +281,10 @@ function createActionRaw(actionID, actionName, baseStatus, statusList, locationL
 	action.status = stateList;
 	action.perform = performance;
 	// functions in perform have acess to the id of the action along with all global variables.
+}
+
+function createConnection(areaID, directionIN, descriptionIN){
+	return {id: areaID, direction: directionIN, description: descriptionIN};
 }
 
 function setAreaPoint(point){

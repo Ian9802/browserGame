@@ -20,12 +20,20 @@ var testArea1 = {
 	},
 	// really basic idea of how the descriptions will work
 	// If there isn't a description available for a status it will use the base
-	connected: [1, 2, 3, 4],
+	// connected: [1, 2, 3, 4],
 	// id of rooms it's connected to
-	direction: ["N", "S", "E", "W"]
+	// direction: ["You moved North", "...S", "...E", "...W"],
 	// What the path is to get there?
 	// <You drag yourself up the stairs> [whole thing is direction]
 	// adding/removing paths is an action.
+	// description: ["Move North", "Move South", "Move East", "Move West"]
+	// descriptions of the directions, will appear in the movement button.
+	connected: [
+		{id: 1, direction: "You moved North", description: "Move North"},
+		{id: 2, direction: "You moved South", description: "Move South"},
+		{id: 3, direction: "You moved East", description: "Move East"},
+		{id: 4, direction: "You moved West", description: "Move West"}
+	]
 }
 
 var testArea2 = {
@@ -41,8 +49,12 @@ var testArea2 = {
 		state: ["Q", "R"]
 	},
 	areaState: 1,
-	connected: [1, 2, 3, 4],
-	direction: ["N", "S", "E", "W"]
+	connected: [
+		{id: 1, direction: "You moved North", description: "Move North"},
+		{id: 2, direction: "You moved South", description: "Move South"},
+		{id: 3, direction: "You moved East", description: "Move East"},
+		{id: 4, direction: "You moved West", description: "Move West"}
+	]
 }
 
 areas.push(testArea1);

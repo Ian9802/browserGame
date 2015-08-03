@@ -16,7 +16,9 @@ var areaPoint = 1;
 var itemPoint = 1;
 var actionPoint = 1;
 
-var noItemsFound = "There are no items of importance here.";
+// var noItemsFound = "There are no items of importance here.";
+var noItemsFound = "";
+var itemsFoundInv = "Held there ";
 var itemsFound = "In sight there ";
 var plural = "are : ";
 var singular = "is a ";
@@ -26,36 +28,59 @@ function log(content){
 	console.log(content);
 }
 
-// specialized displayItems
-// function checkInventory(){
-// 	log(displayItems(0));
-// }
-
 // descibes the area and available items and actions
 function displayArea(areaID){
-	log(describeArea(areaID));
-	var found = displayItems(areaID);
-	if(found.length == 0){
-		log(noItemsFound);
-	}else if(found.length == 1){
-		log(itemsFound + singular + found[0]);
-	}else{
-		var list = "";
-		for(var i=0; i<found.length; i++){
-			list += found[i]
-			if(i != found.length-1){
-				list += ", ";
-				if(i == found.length-2){
-					list += "and "
-				}
-			}
-
-			 
-		}
-		log(itemsFound + plural);
+	if(areaID == null){
+		log("Bad areaID");
+		return;
 	}
 	setAreaState(areaID);
 	displayActions(areaID, areaState);
+	post(describeArea(areaID));
+	displayAreaItem(areaID);
+	setAreaState(areaID);
+	displayAreaMove(areaID);
+}
+
+function displayAreaItem(areaID){
+	var found = displayItems(areaID);
+	if(found.length == 0){
+		post(noItemsFound);
+	}else if(found.length == 1){
+		post(itemsFound + singular + found[0].desc);
+	}else{
+		var list = "";
+		for(var i=0; i<found.length; i++){
+			list += found[i].desc;
+			if(i != found.length-1 && found.length > 2){
+				list += ", ";
+			}
+			if(i == found.length-2){
+				list += "and "
+			}
+		}
+		post(itemsFound + plural);
+	}
+}
+
+function displayAreaMove(areaID){
+	var location = getLocation(areas, areaID);
+	if(location != -1){
+		var area = areas[location];
+		for(var i = 0; i < area.connected.length; i++){
+			moveButton(area.connected[i]);
+		}
+	}
+}
+
+function moveButton(connection){
+	createButton("#input", connection.description, connection, move, "");
+}
+
+function move(connection){
+	area = connection.id;
+	post(connection.direction);
+	refresh();
 }
 
 /*
@@ -104,16 +129,18 @@ function describeItem(itemID){
 
 // with any status
 function describeItemRaw(itemID, statusID){
+	var statusID = parseInt(statusID, 10);
 	var location = getLocation(items, itemID);
 	if(location != -1){
-		if(items[location].hidden.indexOf(statusID) != -1){
+		if(items[location].hidden.indexOf(0) == -1 && items[location].hidden.indexOf(statusID) == -1){
 			return describeRaw(items[location], statusID);
 		}
 	}
 	return "";
 }
 
-// finds all items within an area and calls describe with them
+// finds all items within an area and calls describe with them, 
+// returns in object to keep them individual, name and desc
 function displayItems(areaID){
 	return displayItemsRaw(areaID, status);
 }
@@ -123,7 +150,7 @@ function displayItemsRaw(areaID, statusID){
 	found = [];
 	for (var i = 0; i < items.length; i++) {
 		if(items[i].location == areaID){
-			found += describeRaw(items[i], statusID);
+			found.push({name: items[i].name, desc: describeRaw(items[i], statusID)});
 		}
 	}
 	return found;
@@ -166,9 +193,13 @@ function displayActions(areaID, statusID){
 			}else{
 				for(var j = 0; j < actions[i].location.length; j++){
 					if(actions[i].location[j].area == areaID){
-						itemEvaluation(actions[i].item);
-						valid = true;
+						if(actions[i].location[j].state == null){
+							valid = itemEvaluation(actions[i].item);
 						break;
+						}else if(actions[i].location[j].state == areaState){
+							valid = itemEvaluation(actions[i].item);
+						break;
+						}
 					}
 				}
 			}
@@ -234,6 +265,7 @@ function itemEvaluation(itemRestriction){
 
 // gets the location of zozo in an array
 function getLocation(array, ID){
+	var ID = parseInt(ID, 10)
 	for (var i = 0; i < array.length; i++) {
 		if(array[i].id == ID){
 			return i;
@@ -251,14 +283,28 @@ function describe(zozo){
 
 // with variable statusID
 function describeRaw(zozo, statusID){
-	var statusName = statuses[getLocation(statuses, statusID)].name;
+	if(zozo.hidden != null){
+		if(zozo.hidden.indexOf(status) != -1){
+			if(zozo.location == 0){
+				if(zozo.hiddenInHand){
+					return "";
+				}
+			}else{
+				return "";
+			}
+		}
+	}
+	var statusName = statuses[getLocation(statuses, parseInt(statusID, 10))].name;
 	var core = zozo[statusName];
 	if(!core){
 		core = zozo[statusName];
 	}
 	var content = core.root;
-	if(core.state){
-		content += core.state[zozo.areaState];
+	if(core.state && core.state[areaState]){
+		var stateContent = core.state[zozo.areaState];
+		if(stateContent != null){
+			content += stateContent;
+		}
 	}
 	return content;
 }
