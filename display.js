@@ -41,3 +41,34 @@ function post(content){
 	location.append(node);
 	node.scrollIntoView(false);
 }
+
+function postRaw(node){
+	var location = $('#output');
+	if(Array.isArray(location)){
+		location = location[0];
+	}
+	location.append(node);
+	node.scrollIntoView(false);
+}
+
+function postImage(source){
+	var node = document.createElement("img");
+	node.setAttribute("src", source);
+	postRaw(node);
+}
+
+function postImageAlt(source, altText){
+	var node = document.createElement("img");
+	node.setAttribute("src", source);
+	node.setAttribute("alt", altText);
+	postRaw(node);
+}
+
+function postImageRaw(source, altText, height, width){
+	var node = document.createElement("img");
+	node.setAttribute("src", source);
+	node.setAttribute("alt", altText);
+	node.setAttribute("height", height);
+	node.setAttribute("width", width);
+	postRaw(node);
+}
